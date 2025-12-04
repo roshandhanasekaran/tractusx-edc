@@ -1,0 +1,63 @@
+version: "3.8"
+services:
+  edc:
+    # Tractus-X in-memory runtime (control + data plane)
+    image: tractusx/edc-runtime-memory:0.12.0-SNAPSHOT
+    ports:
+      # DSP / protocol endpoint (catalog, etc.) -> host 8181
+      - "8181:8084"
+      # Management API -> host 8182
+      - "8182:8081"
+      # Public data plane API (optional but useful) -> host 8282
+      - "8282:8086"
+    env_file:
+      - .env
+    environment:
+      EDC_BPN: ${EDC_BPN}
+      EDC_PARTICIPANT_ID: ${EDC_PARTICIPANT_ID}
+      # Tractus-X identity / DID & BPN
+      EDC_IAM_ISSUER_ID: ${EDC_IATP_ID}
+      TRACTUSX_EDC_PARTICIPANT_BPN: ${EDC_BPN}
+      EDC_HOSTNAME: edc.volttrail.co.uk
+      EDC_OAUTH_TOKEN_URL: ${EDC_OAUTH_TOKEN_URL}
+      EDC_OAUTH_CLIENT_ID: ${EDC_OAUTH_CLIENT_ID}
+      EDC_OAUTH_CLIENT_SECRET: ${EDC_OAUTH_CLIENT_SECRET}
+      EDC_TRUSTED_ISSUER: ${EDC_TRUSTED_ISSUER}
+      EDC_DIM_URL: ${EDC_DIM_URL}
+      EDC_DID_RESOLVER: ${EDC_DID_RESOLVER}
+      EDC_IATP_ID: ${EDC_IATP_ID}
+      EDC_CONNECTOR_HOSTNAME: ${EDC_CONNECTOR_HOSTNAME}
+      EDC_PORT: ${EDC_PORT}
+      # IATP / DIM configuration mapped to runtime settings
+      EDC_IAM_STS_OAUTH_TOKEN_URL: ${EDC_OAUTH_TOKEN_URL}
+      EDC_IAM_STS_OAUTH_CLIENT_ID: ${EDC_OAUTH_CLIENT_ID}
+      EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: client-secret
+      TX_EDC_IAM_STS_DIM_URL: ${EDC_DIM_URL}
+      # Configure at least one trusted issuer for IATP
+      EDC_IAM_TRUSTED-ISSUER_0_ID: ${EDC_TRUSTED_ISSUER}
+      # BPN/DID Resolution Service (BDRS)
+      TX_EDC_IAM_IATP_BDRS_SERVER_URL: ${EDC_DID_RESOLVER}
+      # Data plane token aliases (keys must be present in vault for real transfers)
+      EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS: key-1
+      EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS: key-1
+      # HTTP endpoint configuration (align with Helm defaults)
+      WEB_HTTP_PORT: 8080
+      WEB_HTTP_PATH: /api
+      WEB_HTTP_MANAGEMENT_PORT: 8081
+      WEB_HTTP_MANAGEMENT_PATH: /management
+      WEB_HTTP_CONTROL_PORT: 8083
+      WEB_HTTP_CONTROL_PATH: /control
+      WEB_HTTP_PROTOCOL_PORT: 8084
+      WEB_HTTP_PROTOCOL_PATH: /api/v1/dsp
+      WEB_HTTP_PUBLIC_PORT: 8086
+      WEB_HTTP_PUBLIC_PATH: /api/public
+      WEB_HTTP_CATALOG_PORT: 8085
+      WEB_HTTP_CATALOG_PATH: /catalog
+      WEB_HTTP_CATALOG_AUTH_TYPE: tokenbased
+      WEB_HTTP_CATALOG_AUTH_KEY: password
+      TX_EDC_DPF_CONSUMER_PROXY_AUTH_APIKEY: password
+      # DSP callback address (external)
+      EDC_DSP_CALLBACK_ADDRESS: ${EDC_CONNECTOR_HOSTNAME}/api/v1/dsp
+      # Simple in-memory vault: expose client secret under alias 'client-secret'
+      TX_EDC_VAULT_SECRETS: "client-secret:${EDC_OAUTH_CLIENT_SECRET}"
+    restart: unless-stopped
